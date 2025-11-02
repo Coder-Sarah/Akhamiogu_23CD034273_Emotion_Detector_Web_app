@@ -6,7 +6,6 @@ matplotlib==3.9.2
 scikit-learn==1.5.1
 flask-cors==5.0.0
 kaggle==1.6.17
-pip freeze
 flask-cors==5.0.0
 deepface==0.0.91
 gunicorn==22.0.0
