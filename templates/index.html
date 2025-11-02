@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Emotion Detector - AKHAMIOGU 23CD034273</title>
+  <style>
+    body {font-family: Arial, sans-serif; text-align: center; margin-top: 40px; background: #f4f4f4;}
+    h1 {color: #2c3e50;}
+    input, button {margin: 10px; padding: 10px; font-size: 16px;}
+    video, img {max-width: 400px; border: 3px solid #3498db; border-radius: 10px; margin: 15px;}
+    #result {font-size: 1.8em; font-weight: bold; color: #27ae60; margin: 20px;}
+    .container {max-width: 600px; margin: auto; padding: 20px; background: white; border-radius: 15px; box-shadow: 0 0 15px rgba(0,0,0,0.1);}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>AI Facial Emotion Detector</h1>
+    <p>By <strong>AKHAMIOGU_23CD034273</strong></p>
+
+    <input type="text" id="userName" placeholder="Enter Your Name" required><br><br>
+
+    <button onclick="startCam()">Start Webcam</button>
+    <button onclick="capturePhoto()">Capture & Detect Emotion</button><br><br>
+
+    <video id="video" autoplay playsinline style="display:none;"></video>
+    <canvas id="canvas" style="display:none;"></canvas>
+    <img id="preview" style="display:none;" alt="Captured Image"><br>
+
+    <div id="result"></div>
+  </div>
+
+  <script>
+    let video, canvas, ctx;
+    const videoEl = document.getElementById('video');
+    const canvasEl = document.getElementById('canvas');
+    const previewEl = document.getElementById('preview');
+    const resultEl = document.getElementById('result');
+
+    function startCam() {
+      navigator.mediaDevices.getUserMedia({video: {facingMode: 'user'}})
+        .then(stream => {
+          video = stream;
+          videoEl.srcObject = stream;
+          videoEl.play();
+          videoEl.style.display = 'block';
+          canvas = canvasEl.getContext('2d');
+          canvasEl.width = 640;
+          canvasEl.height = 480;
+        })
+        .catch(err => {
+          alert("Camera access denied or not available: " + err);
+        });
+    }
+
+    function capturePhoto() {
+      if (!videoEl.srcObject) {
+        alert("Start webcam first!");
+        return;
+      }
+
+      canvas.drawImage(videoEl, 0, 0, canvasEl.width, canvasEl.height);
+      const dataUrl = canvasEl.toDataURL('image/jpeg', 0.8);
+
+      previewEl.src = dataUrl;
+      previewEl.style.display = 'block';
+
+      const formData = new FormData();
+      formData.append('user_name', document.getElementById('userName').value || 'Anonymous');
+      formData.append('image', dataUrl);
+
+      resultEl.textContent = "Analyzing...";
+
+      fetch('/detect_emotion', {
+        method: 'POST',
+        body: formData
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.emotion) {
+          resultEl.innerHTML = `Detected Emotion: <strong>${data.emotion.toUpperCase()}</strong>`;
+        } else {
+          resultEl.textContent = "Error: " + data.error;
+        }
+      })
+      .catch(err => {
+        resultEl.textContent = "Network error: " + err;
+      });
+    }
+  </script>
+</body>
+</html>
